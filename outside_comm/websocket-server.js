@@ -28,7 +28,7 @@ const too_many_status = {
     "tcp_parse_options": -1
 
 }
-// 定义全局变量用于记录数据量
+// Define global variables to record the amount of data
 let originalDataSize = 0;
 let totalDataSize = 0;
 
@@ -36,7 +36,7 @@ let totalDataSize = 0;
 function getNginxPid() {
     const {exec} = require('child_process');
 
-// 获取 Nginx 主进程的 PID 并存储在全局变量中
+//  Get Nginx main process PID
     exec("ps aux | grep 'apache2' | grep -v grep | awk '{print $2}'", (error, stdout, stderr) => {
         if (error) {
             console.error(`执行命令时发生错误：${error.message}`);
@@ -47,7 +47,7 @@ function getNginxPid() {
             return;
         }
 
-// 提取 Nginx 进程的 PID，以空格分割为数组
+// Extract the PID of the Nginx process
         let nginxPids = stdout.trim().split(/\s+/);
         console.log(`Nginx 所有进程的 PID 是：${nginxPids}`);
 
@@ -64,7 +64,7 @@ const readline = require('readline');
 function runStap() {
 //systemtap
     const {spawn} = require('child_process');
-    const cmd = 'sudo'; // 运行的外部命令
+    const cmd = 'sudo'; 
     const find = spawn(cmd, ['/home/cc/systemtap-4.9/stap', '/home/cc/systemtap-test/socket-trace.stp']);
 
     //const find = exec(cmd);
@@ -73,13 +73,13 @@ function runStap() {
     return find;
 }
 
-// 监听子进程的关闭事件
+// Listen for the closure event of the child process
 find.on('close', (code) => {
-    console.log(`子进程退出，退出码 ${code}`);
+    console.log(`exit ${code}`);
     find = runStap();
 });
 find.on('error', (error) => {
-    console.error('子进程出现错误：', error);
+    console.error('error：', error);
     find=runStap()
 });
 
@@ -99,7 +99,7 @@ server.on('connection', (socket, request) => {
         clientIP = clientIP.replace(/^.*:/, '');
     }
     clientIP = clientIP.trim();
-    let messageCounter = 0; // 用于编号消息
+    let messageCounter = 0; 
     console.log('Client connected IP:', clientIP);
 
     originalDataSize = 0;
@@ -110,11 +110,11 @@ server.on('connection', (socket, request) => {
     //     if (err) throw err;
     // });
 
-    // 创建逐行读取接口
+    // read interface
     let rl = readline.createInterface({
         input: find.stdout
     });
-    // 监听每一行输出
+    // read interface
     rl.on('line', (line) => {
         const kind_part = line.substring(0, line.indexOf("->"));
 
@@ -127,17 +127,17 @@ server.on('connection', (socket, request) => {
                     if (line in too_many_status) {
                         return;
                     }
-                    // 构造消息对象
+                    // Construct the message object
                     const messageId = ++messageCounter;
                     const serverMessage = {
                         type: 'tcp_func_call', data: {
                             messageId, timestamp, message: line
                         }
                     };
-                    // 将消息发送给客户端
+                    // Send the message to the client
                     let serverMessageStr = JSON.stringify(serverMessage);
                     originalDataSize += serverMessageStr.length;
-                    const tcpHeaderSize = 20; // 假设 TCP 包头大小为 20 字节
+                    const tcpHeaderSize = 20; 
                     totalDataSize += serverMessageStr.length + tcpHeaderSize;
 
                     socket.send(serverMessageStr);
@@ -150,7 +150,7 @@ server.on('connection', (socket, request) => {
             if (Math.abs(timestamp - lastCwndTime) < 10) return;
             else lastCwndTime = timestamp;
 
-            // 提取 IP 地址
+            // Extract the IP address
             const ipRegex = /ip: \[(\d+\.\d+\.\d+\.\d+)\]/;
             const ipMatch = line.match(ipRegex);
             const ipAddress = ipMatch ? ipMatch[1] : "IP_FAILED";
@@ -158,12 +158,12 @@ server.on('connection', (socket, request) => {
                 return;
             }
 
-            // 提取时间戳
+            // Extract the timestamp
             const timestampRegex = /\[(\d+)\]/;
             const timestampMatch = line.match(timestampRegex);
             const timestampValue = timestampMatch ? parseInt(timestampMatch[1]) * 1000 : timestamp;
 
-            // 提取 cur_cwnd
+            // Extract cur_cwnd
             const curCwndRegex = /cur_cwnd: \[(\d+)\]/;
             const curCwndMatch = line.match(curCwndRegex);
             const curCwnd = curCwndMatch ? parseInt(curCwndMatch[1]) : -1;
@@ -171,17 +171,17 @@ server.on('connection', (socket, request) => {
             if (lastCwnd === curCwnd) return;
             else lastCwnd = curCwnd;
 
-            // 提取 last_max_cwnd
+            // Extract last_max_cwnd
             const lastMaxCwndRegex = /last_max_cwnd: \[(\d+)\]/;
             const lastMaxCwndMatch = line.match(lastMaxCwndRegex);
             const lastMaxCwnd = lastMaxCwndMatch ? parseInt(lastMaxCwndMatch[1]) : -1;
 
-            // 提取 ssthresh
+            // Extract ssthresh
             const ssthreshRegex = /ssthresh: \[(\d+)\]/;
             const ssthreshMatch = line.match(ssthreshRegex);
             const ssthresh = ssthreshMatch ? parseInt(ssthreshMatch[1]) : -1;
 
-            // 提取 rtt
+            // Extract rtt
             const rttRegex = /rtt: \[(\d+)\]/;
             const rttMatch = line.match(rttRegex);
             const rtt = rttMatch ? parseInt(rttMatch[1]) : -1;
@@ -192,7 +192,7 @@ server.on('connection', (socket, request) => {
             }
             const messageId = ++messageCounter;
 
-            const serverMessage = {//時間戳以stap輸出為準
+            const serverMessage = {
                 type: 'cwnd_change', data: {
                     messageId, timestamp: timestampValue, curCwnd, lastMaxCwnd, ssthresh, rtt
                 }
@@ -207,18 +207,18 @@ server.on('connection', (socket, request) => {
                     const timestamp = new Date().getTime();
                     line = line.substring(line.indexOf("->") + 2).trim();
 
-                    // 提取 ca_state 字段值
+                    // Extract ca_state
                     const caStateRegex = /ca_state=0x(\w+)/;
                     const caStateMatch = line.match(caStateRegex);
                     const caStateValue = caStateMatch ? parseInt(caStateMatch[1], 16) : -1;
                     if (caStateValue === -1) return;
 
-                    // 提取最后的时间戳数字
+                    // Extract timestamp
                     const timestampRegex = /\[(\d+)\]/;
                     const timestampMatch = line.match(timestampRegex);
                     const timestampValue = timestampMatch ? parseInt(timestampMatch[1]) : timestamp;
 
-                    const serverMessage = {//時間戳以stap輸出為準
+                    const serverMessage = {
                         type: 'ca_state_change', data: {
                             messageId, timestamp: timestampValue, caState: caStateValue
                         }
@@ -233,19 +233,19 @@ server.on('connection', (socket, request) => {
 
     });
 
-    // 监听客户端发来的消息
+    // Listen for messages sent by the client
     socket.on('message', (data) => {
         const clientMessage = JSON.parse(data);
 
         if (clientMessage.type === 'clientResponse') {
-            // 处理客户端的回应消息
+            // Handle the response messages from the client
             const messageId = clientMessage.data.messageId;
             const clientTimestamp = clientMessage.data.sendingTimestamp;
 
-            // 计算往返时延
+            // RTT
             const roundTripTime = new Date().getTime() - clientTimestamp;
 
-            // 打印日志
+            // Print Log
             //console.log(`Received client response for message ${messageId}: Round-trip time: ${roundTripTime} ms`);
             const feedbackMessage = {
                 type: 'feedback', data: {
@@ -265,11 +265,11 @@ server.on('connection', (socket, request) => {
             };
             socket.send(JSON.stringify(clockSyncRespMessage));
         } else {
-            // 处理其他类型的消息
+            // Handle other types of messages
             console.log(`Received from client: ${data}`);
         }
     });
-    // 当客户端断开连接时停止发送消息
+    // Stop sending messages when the client disconnects
     socket.on('close', () => {
         // clearInterval(handler);
         console.log('Client disconnected');
@@ -280,12 +280,12 @@ server.on('connection', (socket, request) => {
 function monitorCpuUsageToFile(filePath, interval = 500) {
     const csvHeader = 'Timestamp,CPU_Usage,Original_Data_Size,Total_Data_Size\n';
 
-    // 写入表头到指定文件
+    
     fs.writeFile(filePath, csvHeader, (err) => {
         if (err) {
-            console.error('无法写入表头到文件:', err);
+            console.error('table header cannot be written to the file:', err);
         } else {
-            console.log(`已创建 ${filePath} 文件并写入表头`);
+            console.log(`create ${filePath} file and write it into the table header`);
         }
     });
 
@@ -293,18 +293,18 @@ function monitorCpuUsageToFile(filePath, interval = 500) {
         os.cpuUsage((usage) => {
             const timestamp = new Date().getTime();
 
-            // 构造记录的数据行
+            // construct the data rows of the record
             const dataRow = `${timestamp},${(usage * 100).toFixed(2)},${originalDataSize},${totalDataSize}\n`;
 
             fs.appendFile(filePath, dataRow, (err) => {
                 if (err) {
-                    console.error('无法写入到文件:', err);
+                    console.error('Cannot be written to the file:', err);
                 }
             });
         });
     }
 
-    // 每隔指定时间间隔输出一次 CPU 利用率和数据量到指定文件
+    // output the CPU utilization rate and data volume to the specified file at specified time intervals
     let handler = setInterval(monitorCpuUsage, interval);
     return handler;
 }
