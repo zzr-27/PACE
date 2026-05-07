@@ -72,17 +72,17 @@ function BolaRule(config) {
 
     class Automaton {
         constructor() {
-            this.currentState = null; // 当前状态
-            this.transitions = new Map(); // 转移规则
-            this.states = new Set(); // 所有状态集合
+            this.currentState = null; 
+            this.transitions = new Map(); 
+            this.states = new Set(); 
         }
 
-        // 添加状态
+        
         addState(state) {
             this.states.add(state);
         }
 
-        // 添加转移和条件
+        
         addTransition(fromState, toState, condition) {
             if (!this.states.has(fromState) || !this.states.has(toState)) {
                 throw new Error('Invalid state');
@@ -108,12 +108,12 @@ function BolaRule(config) {
             return all_input;
         }
 
-        // 设置当前状态
+        
         setCurrentState(state) {
             this.currentState = state;
         }
 
-        // 处理事件
+        
         handleEvent(event) {
             if (!this.currentState) {
                 throw new Error('Current state is not set');
@@ -125,8 +125,8 @@ function BolaRule(config) {
             }
 
             for (const transition of transitions) {
-                if (transition.condition(event)) { // 根据条件判断是否满足转移条件
-                    this.currentState = transition.toState; // 更新当前状态
+                if (transition.condition(event)) { 
+                    this.currentState = transition.toState; 
                     return;
                 }
             }
@@ -152,14 +152,13 @@ function BolaRule(config) {
     function tcpBasedInit() {
         let automaton = new Automaton();
 
-        // 添加状态
         automaton.addState(openWindowStatus);
         automaton.addState(disorderWindowStatus);
         automaton.addState(lossWindowStatus);
         automaton.addState(recoveryWindowStatus);
 
 
-        // 添加转移和条件
+       
         automaton.addTransition(openWindowStatus, disorderWindowStatus, (event) => {
             return ['tcp_check_sack_reordering'].includes(event);
         });
@@ -202,7 +201,7 @@ function BolaRule(config) {
             return ['tcp_mark_skb_lost',].includes(event) || event.includes('lost');
         });
 
-        // 设置初始状态
+        
         automaton.setCurrentState(openWindowStatus);
         TCPStatusInfo.automaton = automaton;
         // var allInput = automaton.get_all_input();
@@ -230,7 +229,7 @@ function BolaRule(config) {
         }
 
         if (len < 2) {
-            return 2e9; // 返回 大数字 表示找不到足够的状态出现次数
+            return 2e9;
         }
 
         let this_timeDifference = Math.abs(statusTimes[len - 1] - statusTimes[len - 2]);
@@ -242,8 +241,8 @@ function BolaRule(config) {
             history_reduction_interval *= 7;
             history_reduction_interval += this_timeDifference / 8
         }
-        history_reduction_interval=Math.max(history_reduction_interval,0.5)// 两次降窗的间隔不应低于500ms
-        return history_reduction_interval // 返回时间差的绝对值
+        history_reduction_interval=Math.max(history_reduction_interval,0.5)
+        return history_reduction_interval 
     }
 
 
