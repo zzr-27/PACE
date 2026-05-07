@@ -17,17 +17,16 @@ const recoveryWindowStatus = 'recovery_window';
 const lossWindowStatus = 'loss_window';
 class Automaton {
     constructor() {
-        this.currentState = null; // 当前状态
-        this.transitions = new Map(); // 转移规则
-        this.states = new Set(); // 所有状态集合
+        this.currentState = null; 
+        this.transitions = new Map(); 
+        this.states = new Set(); 
     }
 
-    // 添加状态
+    
     addState(state) {
         this.states.add(state);
     }
 
-    // 添加转移和条件
     addTransition(fromState, toState, condition) {
         if (!this.states.has(fromState) || !this.states.has(toState)) {
             throw new Error('Invalid state');
@@ -53,12 +52,12 @@ class Automaton {
         return all_input;
     }
 
-    // 设置当前状态
+    // set the current state
     setCurrentState(state) {
         this.currentState = state;
     }
 
-    // 处理事件
+    // handle event
     handleEvent(event) {
         if (!this.currentState) {
             throw new Error('Current state is not set');
@@ -70,8 +69,8 @@ class Automaton {
         }
 
         for (const transition of transitions) {
-            if (transition.condition(event)) { // 根据条件判断是否满足转移条件
-                this.currentState = transition.toState; // 更新当前状态
+            if (transition.condition(event)) { 
+                this.currentState = transition.toState; 
                 return;
             }
         }
@@ -84,18 +83,18 @@ class Automaton {
 socket.onopen = () => {
     console.log('WebSocket 连接成功');
 
-    // 循环发送消息进行时钟同步
-    let AllNumSyncs = 10; // 设置要进行的同步次数
+    // Loop to send messages for clock synchronization
+    let AllNumSyncs = 10; 
 
     let outInterval = setInterval(() => {
-        let numSyncs = 10; // 设置要进行的同步次数
+        let numSyncs = 10; 
         let intervalId = setInterval(() => {
-            const timestamp = Date.now(); // 获取当前时间戳
+            const timestamp = Date.now(); 
             const message = JSON.stringify({
                 messageId: numSyncs, type: 'clockSync', clientTimestamp: timestamp
             });
 
-            // 发送消息到服务器
+            // Send a message to the server
             socket.send(message);
             numSyncs--;
             if (numSyncs <= 0) {
@@ -178,7 +177,7 @@ socket.addEventListener('message', (event) => {
     }
     else if (serverMessage.type === 'clockSyncResp') {
         const messageId = serverMessage.data.messageId;
-        const serverTimestamp = serverMessage.data.serverTimestamp; // 服务器返回的时间戳
+        const serverTimestamp = serverMessage.data.serverTimestamp; 
         const clientTimestamp = serverMessage.data.clientTimestamp;
         const roundTripTime = new Date().getTime() - clientTimestamp;
 
@@ -190,7 +189,7 @@ socket.addEventListener('message', (event) => {
         console.log(`${messageId} times clock sync offset is  ${offset} ms`);
         // ,rtt is ${roundTripTime}, client send at ${clientTimestamp}, server rcv at ${serverTimestamp}`);
 
-        // 最后一次同步完成后计算平均值并输出
+      
         if (clockOffset === 0) {
             clockOffset = offset;
         } else {
