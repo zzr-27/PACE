@@ -1,6 +1,6 @@
-# OMEN
+# PACE
 
-opensource code repo for  《OMEN: Enabling High Precision Adaptive Streaming by Capturing the Congestion Statistics 》
+opensource code repo for  《PACE: Enabling High Precision Adaptive Streaming by Capturing the Congestion Statistics 》
 
 the paper link is ([todo])
 
